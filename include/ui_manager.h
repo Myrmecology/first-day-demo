@@ -91,6 +91,18 @@ public:
     void set_stats_detailed(bool detailed);
     
     /**
+     * Check if help is currently visible
+     * @return True if help should be displayed
+     */
+    bool is_help_visible() const { return help_visible; }
+    
+    /**
+     * Check if detailed stats are visible
+     * @return True if stats should be displayed
+     */
+    bool is_stats_detailed() const { return stats_detailed; }
+    
+    /**
      * Update UI animations
      */
     void update_animations();

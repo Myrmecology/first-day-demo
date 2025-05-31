@@ -27,7 +27,7 @@ volatile sig_atomic_t should_exit = 0;
 /**
  * Signal handler for graceful shutdown
  */
-void signal_handler(int signum) {
+void signal_handler(int) {
     should_exit = 1;
 }
 
