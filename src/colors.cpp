@@ -29,10 +29,11 @@ void init_fire_colors() {
     // Get console info
     GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
     
-    // Enable virtual terminal processing for better color support
+    // Enable virtual terminal processing for better color support (if available)
     DWORD dwMode = 0;
     GetConsoleMode(hConsole, &dwMode);
-    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    // Note: ENABLE_VIRTUAL_TERMINAL_PROCESSING may not be available on older Windows
+    dwMode |= 0x0004;  // ENABLE_VIRTUAL_TERMINAL_PROCESSING value
     SetConsoleMode(hConsole, dwMode);
     
     // Set console title
@@ -86,13 +87,13 @@ void set_console_color(int color) {
             windowsColor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
             break;
         case UI_HIGHLIGHT:
-            windowsColor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+            windowsColor = FOREGROUND_GREEN;
             break;
         case UI_WARNING:
             windowsColor = FOREGROUND_RED | FOREGROUND_INTENSITY;
             break;
         case UI_SUCCESS:
-            windowsColor = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+            windowsColor = FOREGROUND_GREEN;
             break;
         default:
             windowsColor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;

@@ -95,7 +95,7 @@ void show_splash() {
     auto start_time = std::chrono::steady_clock::now();
     while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(2)) {
         if (get_key_press() != -1) break;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        Sleep(100);  // Windows Sleep function
     }
 }
 
@@ -210,7 +210,9 @@ int main() {
             auto frame_time = frame_end - frame_start;
             
             if (frame_time < frame_duration) {
-                std::this_thread::sleep_for(frame_duration - frame_time);
+                auto sleep_time = frame_duration - frame_time;
+                auto sleep_ms = std::chrono::duration_cast<std::chrono::milliseconds>(sleep_time);
+                Sleep(static_cast<DWORD>(sleep_ms.count()));
             }
         }
         

@@ -1,15 +1,28 @@
 /**
  * ASCII Fire Effect Simulator
- * Fire simulation engine implementation
+ * Fire simulation engine implementation - Windows Console Compatible
  * 
  * Implements realistic fire physics with heat diffusion and wind effects
  */
 
 #include "fire_engine.h"
-#include <ncurses.h>
+#include "colors.h"
 #include <algorithm>
 #include <cmath>
 #include <chrono>
+#include <iostream>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <ncurses.h>
+#endif
+
+// Helper function for older compilers without std::clamp
+template<typename T>
+T clamp(T value, T min_val, T max_val) {
+    return std::max(min_val, std::min(value, max_val));
+}
 
 /**
  * Constructor - Initialize fire simulation
@@ -120,8 +133,13 @@ void FireEngine::update() {
  */
 void FireEngine::render() {
     // Get screen offset (center the fire)
-    int max_y, max_x;
+    int max_x, max_y;
+    
+#ifdef _WIN32
+    get_console_size(max_x, max_y);
+#else
     getmaxyx(stdscr, max_y, max_x);
+#endif
     
     int offset_x = (max_x - width) / 2;
     int offset_y = (max_y - height) / 2;
@@ -135,9 +153,15 @@ void FireEngine::render() {
                 char fire_char = get_fire_char(heat);
                 int color = get_fire_color(heat, current_scheme);
                 
+#ifdef _WIN32
+                set_cursor_position(offset_x + x, offset_y + y);
+                set_console_color(color);
+                std::cout << fire_char;
+#else
                 attron(COLOR_PAIR(color));
                 mvaddch(offset_y + y, offset_x + x, fire_char);
                 attroff(COLOR_PAIR(color));
+#endif
             }
         }
     }
@@ -152,9 +176,15 @@ void FireEngine::render() {
                 char p_char = (particle.heat > 50) ? '*' : '.';
                 int p_color = get_fire_color(particle.heat, current_scheme);
                 
+#ifdef _WIN32
+                set_cursor_position(offset_x + px, offset_y + py);
+                set_console_color(p_color);
+                std::cout << p_char;
+#else
                 attron(COLOR_PAIR(p_color));
                 mvaddch(offset_y + py, offset_x + px, p_char);
                 attroff(COLOR_PAIR(p_color));
+#endif
             }
         }
     }
@@ -330,7 +360,7 @@ void FireEngine::generate_particles() {
  * Set wind strength and direction
  */
 void FireEngine::set_wind(float strength) {
-    wind_strength = std::clamp(strength, -5.0f, 5.0f);
+    wind_strength = clamp(strength, -5.0f, 5.0f);
     wind_direction = (strength > 0) ? 1.0f : -1.0f;
 }
 
@@ -338,7 +368,7 @@ void FireEngine::set_wind(float strength) {
  * Add or remove fuel
  */
 void FireEngine::add_fuel(int amount) {
-    fuel_amount = std::clamp(fuel_amount + amount, 0, 100);
+    fuel_amount = clamp(fuel_amount + amount, 0, 100);
 }
 
 /**
@@ -346,8 +376,13 @@ void FireEngine::add_fuel(int amount) {
  */
 void FireEngine::ignite_at(int x, int y) {
     // Convert screen coordinates to grid coordinates
-    int max_y, max_x;
+    int max_x, max_y;
+    
+#ifdef _WIN32
+    get_console_size(max_x, max_y);
+#else
     getmaxyx(stdscr, max_y, max_x);
+#endif
     
     int offset_x = (max_x - width) / 2;
     int offset_y = (max_y - height) / 2;
