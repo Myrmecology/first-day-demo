@@ -1,0 +1,160 @@
+# ASCII Fire Effect Simulator - .gitignore
+
+# Build artifacts
+build/
+*.o
+*.obj
+*.exe
+*.out
+*.app
+fire_simulator
+fire_simulator.exe
+
+# Compiler and linker files
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# CMake files (if you decide to use CMake later)
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+Makefile.cmake
+*.cmake
+
+# IDE and Editor files
+# VS Code
+.vscode/
+*.code-workspace
+
+# CLion
+.idea/
+cmake-build-*/
+
+# Visual Studio
+*.vcxproj*
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+Debug/
+Release/
+x64/
+x86/
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# OS generated files
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.nfs*
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Core dumps
+core
+core.*
+vgcore.*
+
+# Memory debugging
+*.memcheck
+*.valgrind
+
+# Performance profiling
+gmon.out
+*.prof
+*.perf
+
+# Package managers
+# Conan
+conandata.yml
+conanfile.txt
+conanbuildinfo.*
+
+# vcpkg
+vcpkg_installed/
+
+# Testing artifacts
+test_results/
+coverage/
+*.gcov
+*.gcda
+*.gcno
+
+# Documentation builds
+docs/build/
+doxygen/
+
+# Configuration files (keep templates, ignore local configs)
+config.local
+*.local
+.env
+
+# Archive files
+*.zip
+*.tar.gz
+*.tar.bz2
+*.rar
+*.7z
+
+# Fire simulator specific
+fire_output.txt
+screenshots/
+recordings/
