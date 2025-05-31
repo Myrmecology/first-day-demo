@@ -1,90 +1,183 @@
 /**
  * ASCII Fire Effect Simulator
- * Color system implementation
- * 
- * Implements color pair initialization for all fire schemes
+ * Windows Console color system implementation
  */
 
 #include "colors.h"
-#include <ncurses.h>
+#include <iostream>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <conio.h>
+
+// Global Windows console handles
+HANDLE hConsole = nullptr;
+CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
 
 /**
- * Initialize all color pairs for the fire simulator
+ * Initialize Windows console for fire simulator
  */
 void init_fire_colors() {
-    // Initialize base fire colors
-    ColorImpl::init_classic_fire();
-    ColorImpl::init_blue_flame();
-    ColorImpl::init_ice_fire();
-    ColorImpl::init_plasma();
-    ColorImpl::init_rainbow();
-    ColorImpl::init_matrix();
-    ColorImpl::init_ui_colors();
-}
-
-namespace ColorImpl {
-
-/**
- * Initialize classic fire color scheme (red/orange/yellow/white)
- */
-void init_classic_fire() {
-    init_pair(FIRE_BLACK, COLOR_BLACK, COLOR_BLACK);
-    init_pair(FIRE_RED, COLOR_RED, COLOR_BLACK);
-    init_pair(FIRE_ORANGE, COLOR_YELLOW, COLOR_BLACK);     // Closest to orange
-    init_pair(FIRE_YELLOW, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(FIRE_WHITE, COLOR_WHITE, COLOR_BLACK);
-}
-
-/**
- * Initialize blue flame color scheme
- */
-void init_blue_flame() {
-    init_pair(FIRE_BLUE, COLOR_BLUE, COLOR_BLACK);
-    init_pair(FIRE_CYAN, COLOR_CYAN, COLOR_BLACK);
-    // White and black already initialized
+    // Get console handle
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    
+    if (hConsole == INVALID_HANDLE_VALUE) {
+        std::cerr << "Failed to get console handle!" << std::endl;
+        return;
+    }
+    
+    // Get console info
+    GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
+    
+    // Enable virtual terminal processing for better color support
+    DWORD dwMode = 0;
+    GetConsoleMode(hConsole, &dwMode);
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(hConsole, dwMode);
+    
+    // Set console title
+    SetConsoleTitleA("🔥 ASCII Fire Effect Simulator 🔥");
+    
+    // Hide cursor
+    set_cursor_visible(false);
 }
 
 /**
- * Initialize ice fire color scheme (cyan/white)
+ * Set text color in Windows console
  */
-void init_ice_fire() {
-    // Cyan and white already initialized in other schemes
-    // This scheme reuses existing color pairs
+void set_console_color(int color) {
+    if (hConsole == nullptr) return;
+    
+    // Map our color constants to Windows console colors
+    WORD windowsColor = 0;
+    
+    switch (color) {
+        case FIRE_BLACK:
+            windowsColor = 0;
+            break;
+        case FIRE_RED:
+            windowsColor = FOREGROUND_RED;
+            break;
+        case FIRE_ORANGE:
+            windowsColor = FOREGROUND_RED | FOREGROUND_GREEN;
+            break;
+        case FIRE_YELLOW:
+            windowsColor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+            break;
+        case FIRE_WHITE:
+            windowsColor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+            break;
+        case FIRE_BLUE:
+            windowsColor = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+            break;
+        case FIRE_CYAN:
+            windowsColor = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+            break;
+        case FIRE_MAGENTA:
+            windowsColor = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+            break;
+        case FIRE_GREEN:
+            windowsColor = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+            break;
+        case UI_BORDER:
+            windowsColor = FOREGROUND_BLUE | FOREGROUND_GREEN;
+            break;
+        case UI_TEXT:
+            windowsColor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+            break;
+        case UI_HIGHLIGHT:
+            windowsColor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+            break;
+        case UI_WARNING:
+            windowsColor = FOREGROUND_RED | FOREGROUND_INTENSITY;
+            break;
+        case UI_SUCCESS:
+            windowsColor = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+            break;
+        default:
+            windowsColor = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+            break;
+    }
+    
+    SetConsoleTextAttribute(hConsole, windowsColor);
 }
 
 /**
- * Initialize plasma color scheme (magenta/cyan/white)
+ * Get console dimensions
  */
-void init_plasma() {
-    init_pair(FIRE_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
-    // Cyan and white already initialized
+void get_console_size(int& width, int& height) {
+    if (hConsole == nullptr) {
+        width = 80;
+        height = 25;
+        return;
+    }
+    
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    
+    width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    height = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 }
 
 /**
- * Initialize rainbow color scheme
+ * Set cursor position
  */
-void init_rainbow() {
-    // Uses multiple existing colors in rotation
-    // All base colors already initialized
+void set_cursor_position(int x, int y) {
+    if (hConsole == nullptr) return;
+    
+    COORD coord;
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(hConsole, coord);
 }
 
 /**
- * Initialize matrix color scheme (green theme)
+ * Clear console screen
  */
-void init_matrix() {
-    init_pair(FIRE_GREEN, COLOR_GREEN, COLOR_BLACK);
-    // Yellow already initialized for highlights
+void clear_console() {
+    if (hConsole == nullptr) return;
+    
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    DWORD count;
+    DWORD cellCount;
+    COORD homeCoords = {0, 0};
+    
+    if (GetConsoleScreenBufferInfo(hConsole, &csbi) == 0) return;
+    
+    cellCount = csbi.dwSize.X * csbi.dwSize.Y;
+    
+    if (FillConsoleOutputCharacterA(hConsole, (TCHAR)' ', cellCount, homeCoords, &count) == 0) return;
+    
+    if (FillConsoleOutputAttribute(hConsole, csbi.wAttributes, cellCount, homeCoords, &count) == 0) return;
+    
+    SetConsoleCursorPosition(hConsole, homeCoords);
 }
 
 /**
- * Initialize UI color scheme
+ * Hide/show console cursor
  */
-void init_ui_colors() {
-    init_pair(UI_BORDER, COLOR_CYAN, COLOR_BLACK);
-    init_pair(UI_TEXT, COLOR_WHITE, COLOR_BLACK);
-    init_pair(UI_HIGHLIGHT, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(UI_WARNING, COLOR_RED, COLOR_BLACK);
-    init_pair(UI_SUCCESS, COLOR_GREEN, COLOR_BLACK);
+void set_cursor_visible(bool visible) {
+    if (hConsole == nullptr) return;
+    
+    CONSOLE_CURSOR_INFO cursorInfo;
+    GetConsoleCursorInfo(hConsole, &cursorInfo);
+    cursorInfo.bVisible = visible;
+    SetConsoleCursorInfo(hConsole, &cursorInfo);
 }
 
-} // namespace ColorImpl
+/**
+ * Check for key press (non-blocking)
+ */
+int get_key_press() {
+    if (_kbhit()) {
+        return _getch();
+    }
+    return -1;  // No key pressed
+}
+
+#else
+// Placeholder for non-Windows systems
+void init_fire_colors() {
+    // ncurses implementation would go here
+}
+#endif

@@ -1,31 +1,35 @@
 /**
  * ASCII Fire Effect Simulator
- * Color definitions and schemes
+ * Windows Console Color definitions and schemes
  * 
- * Defines all color pairs and palettes used in the fire simulation
+ * Defines all color pairs and palettes using Windows Console API
  */
 
 #ifndef COLORS_H
 #define COLORS_H
 
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <ncurses.h>
+#endif
 
-// Fire color pair constants
+// Fire color constants for Windows Console
 enum FireColors {
-    FIRE_BLACK = 1,     // Background/cool areas
-    FIRE_RED,           // Hot base fire
-    FIRE_ORANGE,        // Medium intensity flames
-    FIRE_YELLOW,        // High intensity flames
-    FIRE_WHITE,         // Hottest core flames
-    FIRE_BLUE,          // Blue flame mode
-    FIRE_CYAN,          // Ice fire mode
-    FIRE_MAGENTA,       // Plasma mode
-    FIRE_GREEN,         // Matrix mode
-    UI_BORDER,          // UI frame color
-    UI_TEXT,            // UI text color
-    UI_HIGHLIGHT,       // UI highlighted elements
-    UI_WARNING,         // Warning/alert color
-    UI_SUCCESS          // Success/good status color
+    FIRE_BLACK = 0,     // Background/cool areas
+    FIRE_RED = 4,       // Hot base fire (FOREGROUND_RED)
+    FIRE_ORANGE = 6,    // Medium intensity flames (FOREGROUND_RED | FOREGROUND_GREEN)
+    FIRE_YELLOW = 14,   // High intensity flames (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY)
+    FIRE_WHITE = 15,    // Hottest core flames (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY)
+    FIRE_BLUE = 9,      // Blue flame mode (FOREGROUND_BLUE | FOREGROUND_INTENSITY)
+    FIRE_CYAN = 11,     // Ice fire mode (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY)
+    FIRE_MAGENTA = 13,  // Plasma mode (FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY)
+    FIRE_GREEN = 10,    // Matrix mode (FOREGROUND_GREEN | FOREGROUND_INTENSITY)
+    UI_BORDER = 3,      // UI frame color (FOREGROUND_BLUE | FOREGROUND_GREEN)
+    UI_TEXT = 7,        // UI text color (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
+    UI_HIGHLIGHT = 2,   // UI highlighted elements (FOREGROUND_GREEN)
+    UI_WARNING = 12,    // Warning/alert color (FOREGROUND_RED | FOREGROUND_INTENSITY)
+    UI_SUCCESS = 8      // Success/good status color (FOREGROUND_GREEN)
 };
 
 // Color scheme types
@@ -39,7 +43,7 @@ enum ColorScheme {
     NUM_COLOR_SCHEMES   // Total number of schemes
 };
 
-// Heat intensity levels (for mapping temperature to colors)
+// Heat intensity levels
 enum HeatLevel {
     HEAT_COLD = 0,      // No fire, background
     HEAT_EMBER,         // Glowing embers
@@ -51,47 +55,65 @@ enum HeatLevel {
     NUM_HEAT_LEVELS
 };
 
+#ifdef _WIN32
+// Windows Console API globals
+extern HANDLE hConsole;
+extern CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+
 /**
- * Initialize all color pairs for ncurses
+ * Initialize Windows console for colors and cursor control
  */
 void init_fire_colors();
 
 /**
- * Get color pair for specific heat level in current scheme
- * @param heat_level The intensity level (0-100)
- * @param scheme Current color scheme
- * @return ncurses color pair ID
+ * Set text color in Windows console
+ */
+void set_console_color(int color);
+
+/**
+ * Get console dimensions
+ */
+void get_console_size(int& width, int& height);
+
+/**
+ * Set cursor position
+ */
+void set_cursor_position(int x, int y);
+
+/**
+ * Clear console screen
+ */
+void clear_console();
+
+/**
+ * Hide/show console cursor
+ */
+void set_cursor_visible(bool visible);
+
+/**
+ * Check for key press (non-blocking)
+ */
+int get_key_press();
+
+#else
+// ncurses compatibility functions
+void init_fire_colors();
+#endif
+
+/**
+ * Get color for specific heat level in current scheme
  */
 int get_fire_color(int heat_level, ColorScheme scheme = CLASSIC_FIRE);
 
 /**
  * Get appropriate character for heat level
- * @param heat_level The intensity level (0-100)
- * @return ASCII character representing the heat intensity
  */
 char get_fire_char(int heat_level);
 
 /**
  * Get color scheme name for display
- * @param scheme The color scheme
- * @return Human-readable name
  */
 const char* get_scheme_name(ColorScheme scheme);
-
-/**
- * Implementation details - color pair initialization
- */
-namespace ColorImpl {
-    void init_classic_fire();
-    void init_blue_flame();
-    void init_ice_fire();
-    void init_plasma();
-    void init_rainbow();
-    void init_matrix();
-    void init_ui_colors();
-}
-
-// Inline implementations for performance-critical functions
 
 /**
  * Fast heat level to color mapping
@@ -134,15 +156,17 @@ inline int get_fire_color(int heat_level, ColorScheme scheme) {
             if (heat_level < 60) return FIRE_CYAN;
             return FIRE_WHITE;
             
-        case RAINBOW:
+        case RAINBOW: {
             // Cycle through colors based on heat
             int color_index = (heat_level / 15) % 6;
             return FIRE_RED + color_index;
+        }
             
         case MATRIX:
             if (heat_level < 40) return FIRE_GREEN;
             return FIRE_YELLOW;
             
+        case NUM_COLOR_SCHEMES:
         default:
             return FIRE_RED;
     }
@@ -154,10 +178,10 @@ inline int get_fire_color(int heat_level, ColorScheme scheme) {
 inline char get_fire_char(int heat_level) {
     if (heat_level <= 0) return ' ';        // No fire
     if (heat_level < 15) return '.';        // Embers
-    if (heat_level < 30) return '░';        // Light flames
-    if (heat_level < 50) return '▒';        // Medium flames
-    if (heat_level < 70) return '▓';        // Dense flames
-    if (heat_level < 90) return '█';        // Intense flames
+    if (heat_level < 30) return ':';        // Light flames
+    if (heat_level < 50) return '^';        // Medium flames
+    if (heat_level < 70) return 'A';        // Dense flames
+    if (heat_level < 90) return 'W';        // Intense flames
     return '#';                             // Core heat
 }
 

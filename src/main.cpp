@@ -1,5 +1,5 @@
 /**
- * ASCII Fire Effect Simulator
+ * ASCII Fire Effect Simulator - Windows Console Version
  * Main entry point and game loop
  * 
  * Author: Your Name
@@ -10,7 +10,11 @@
 #include <chrono>
 #include <thread>
 #include <signal.h>
-#include <ncurses.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <conio.h>
+#endif
 
 #include "fire_engine.h"
 #include "ui_manager.h"
@@ -28,36 +32,20 @@ void signal_handler(int signum) {
 }
 
 /**
- * Initialize ncurses and terminal settings
+ * Initialize display system
  */
 bool init_display() {
-    // Initialize ncurses
-    initscr();
+    // Initialize color system
+    init_fire_colors();
     
-    // Check if terminal supports colors
-    if (!has_colors()) {
-        endwin();
-        std::cerr << "🔥 Error: Terminal does not support colors!" << std::endl;
-        return false;
-    }
-    
-    // Configure terminal settings
-    start_color();              // Enable color support
-    use_default_colors();       // Use terminal's default colors
-    cbreak();                   // Disable line buffering
-    noecho();                   // Don't echo pressed keys
-    keypad(stdscr, TRUE);       // Enable special keys
-    nodelay(stdscr, TRUE);      // Non-blocking input
-    curs_set(0);                // Hide cursor
-    
-    // Check minimum terminal size
-    int max_y, max_x;
-    getmaxyx(stdscr, max_y, max_x);
+    // Check minimum console size
+    int max_x, max_y;
+    get_console_size(max_x, max_y);
     
     if (max_y < 25 || max_x < 80) {
-        endwin();
-        std::cerr << "🔥 Error: Terminal too small! Need at least 80x25, got " 
+        std::cerr << "🔥 Error: Console too small! Need at least 80x25, got " 
                   << max_x << "x" << max_y << std::endl;
+        std::cerr << "Please resize your console window and try again." << std::endl;
         return false;
     }
     
@@ -65,44 +53,50 @@ bool init_display() {
 }
 
 /**
- * Cleanup and restore terminal
+ * Cleanup and restore console
  */
 void cleanup_display() {
-    endwin();
+    set_cursor_visible(true);
+    set_console_color(UI_TEXT);
+    
+    // Move cursor to bottom
+    int width, height;
+    get_console_size(width, height);
+    set_cursor_position(0, height - 1);
 }
 
 /**
  * Display startup splash screen
  */
 void show_splash() {
-    clear();
+    clear_console();
     
-    int max_y, max_x;
-    getmaxyx(stdscr, max_y, max_x);
+    int max_x, max_y;
+    get_console_size(max_x, max_y);
     
     // Center the splash text
     int start_y = max_y / 2 - 3;
     int start_x = max_x / 2 - 15;
     
     // Use fire colors for splash
-    attron(COLOR_PAIR(FIRE_RED));
-    mvprintw(start_y, start_x, "🔥 ASCII FIRE SIMULATOR 🔥");
-    attroff(COLOR_PAIR(FIRE_RED));
+    set_console_color(FIRE_RED);
+    set_cursor_position(start_x, start_y);
+    std::cout << "🔥 ASCII FIRE SIMULATOR 🔥";
     
-    attron(COLOR_PAIR(FIRE_YELLOW));
-    mvprintw(start_y + 1, start_x + 2, "Initializing flames...");
-    attroff(COLOR_PAIR(FIRE_YELLOW));
+    set_console_color(FIRE_YELLOW);
+    set_cursor_position(start_x + 2, start_y + 1);
+    std::cout << "Initializing flames...";
     
-    attron(COLOR_PAIR(FIRE_ORANGE));
-    mvprintw(start_y + 3, start_x + 5, "Press any key to ignite!");
-    attroff(COLOR_PAIR(FIRE_ORANGE));
-    
-    refresh();
+    set_console_color(FIRE_ORANGE);
+    set_cursor_position(start_x + 5, start_y + 3);
+    std::cout << "Press any key to ignite!";
     
     // Wait for key press or 2 seconds
-    timeout(2000);
-    getch();
-    timeout(-1);
+    auto start_time = std::chrono::steady_clock::now();
+    while (std::chrono::steady_clock::now() - start_time < std::chrono::seconds(2)) {
+        if (get_key_press() != -1) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
 }
 
 /**
@@ -121,15 +115,12 @@ int main() {
     }
     
     try {
-        // Initialize color schemes
-        init_fire_colors();
-        
         // Show splash screen
         show_splash();
         
-        // Get terminal dimensions
-        int max_y, max_x;
-        getmaxyx(stdscr, max_y, max_x);
+        // Get console dimensions
+        int max_x, max_y;
+        get_console_size(max_x, max_y);
         
         // Create main components
         FireEngine fire_engine(max_x - 20, max_y - 5);  // Leave space for UI
@@ -147,7 +138,7 @@ int main() {
             auto frame_start = std::chrono::high_resolution_clock::now();
             
             // Handle input
-            int key = getch();
+            int key = get_key_press();
             auto input_result = input_handler.process_input(key);
             
             switch (input_result.action) {
@@ -177,14 +168,23 @@ int main() {
                     
                 case InputAction::CYCLE_COLORS:
                     ui_manager.cycle_color_scheme();
+                    fire_engine.set_color_scheme(ui_manager.get_color_scheme());
                     break;
                     
                 case InputAction::TOGGLE_PAUSE:
                     paused = !paused;
                     break;
                     
+                case InputAction::TOGGLE_HELP:
+                    ui_manager.set_help_visible(!ui_manager.is_help_visible());
+                    break;
+                    
+                case InputAction::TOGGLE_STATS:
+                    ui_manager.set_stats_detailed(!ui_manager.is_stats_detailed());
+                    break;
+                    
                 case InputAction::MOUSE_CLICK:
-                    fire_engine.ignite_at(input_result.mouse_x, input_result.mouse_y);
+                    // Mouse not implemented for console version
                     break;
                     
                 default:
@@ -197,16 +197,13 @@ int main() {
             }
             
             // Render frame
-            clear();
+            clear_console();
             
             // Draw fire effect
             fire_engine.render();
             
             // Draw UI overlay
             ui_manager.render(fire_engine.get_stats(), paused);
-            
-            // Show frame
-            refresh();
             
             // Frame rate limiting
             auto frame_end = std::chrono::high_resolution_clock::now();

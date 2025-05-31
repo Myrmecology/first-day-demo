@@ -8,7 +8,12 @@
 #ifndef INPUT_HANDLER_H
 #define INPUT_HANDLER_H
 
+#ifdef _WIN32
+#include <windows.h>
+#include <conio.h>
+#else
 #include <ncurses.h>
+#endif
 
 /**
  * Available input actions
@@ -51,9 +56,14 @@ private:
     bool help_visible;
     bool stats_visible;
     
-    // Mouse state
+    // Mouse state (Windows compatible)
+#ifdef _WIN32
+    // Windows doesn't use MEVENT
+    bool mouse_enabled;
+#else
     MEVENT mouse_event;
     bool mouse_enabled;
+#endif
     
     // Key repeat prevention
     int last_key;

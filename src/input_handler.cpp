@@ -1,12 +1,17 @@
 /**
  * ASCII Fire Effect Simulator
- * Input handling implementation
+ * Input handling implementation - Windows Console Compatible
  * 
- * Processes keyboard and mouse input for interactive fire control
+ * Processes keyboard input for interactive fire control
  */
 
 #include "input_handler.h"
 #include <cstring>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <conio.h>
+#endif
 
 // Help text for display
 static const char* help_text[] = {
@@ -64,18 +69,13 @@ InputHandler::~InputHandler() {
  */
 InputResult InputHandler::process_input(int key) {
     // Handle no input
-    if (key == ERR) {
+    if (key == -1) {
         return InputResult(InputAction::NONE);
     }
     
     // Check for key repeat prevention
     if (!should_process_key(key)) {
         return InputResult(InputAction::NONE);
-    }
-    
-    // Handle mouse input
-    if (key == KEY_MOUSE) {
-        return process_mouse();
     }
     
     // Process keyboard input
@@ -89,12 +89,14 @@ InputResult InputHandler::process_input(int key) {
         // Wind controls
         case 'w':
         case 'W':
-        case KEY_LEFT:
+        case 'a':  // Alternative left
+        case 'A':
             return InputResult(InputAction::WIND_LEFT);
             
         case 'e':
         case 'E':
-        case KEY_RIGHT:
+        case 'd':  // Alternative right
+        case 'D':
             return InputResult(InputAction::WIND_RIGHT);
         
         // Fuel controls
@@ -134,13 +136,6 @@ InputResult InputHandler::process_input(int key) {
         case 'P':
             return InputResult(InputAction::SAVE_SCREENSHOT);
         
-        // Arrow keys (alternative wind control)
-        case KEY_UP:
-            return InputResult(InputAction::INCREASE_FUEL);
-            
-        case KEY_DOWN:
-            return InputResult(InputAction::DECREASE_FUEL);
-        
         default:
             return InputResult(InputAction::NONE);
     }
@@ -172,37 +167,16 @@ int InputHandler::get_help_line_count() {
 }
 
 /**
- * Process mouse input events
+ * Process mouse input events (Windows version - simplified)
  */
 InputResult InputHandler::process_mouse() {
-    if (!mouse_enabled) {
-        return InputResult(InputAction::NONE);
-    }
-    
-    if (getmouse(&mouse_event) == OK) {
-        // Left click to ignite fire
-        if (mouse_event.bstate & BUTTON1_CLICKED) {
-            return InputResult(InputAction::MOUSE_CLICK, 
-                             mouse_event.x, mouse_event.y);
-        }
-        
-        // Right click for wind burst (future feature)
-        if (mouse_event.bstate & BUTTON3_CLICKED) {
-            // Could add wind burst at mouse position
-            return InputResult(InputAction::NONE);
-        }
-        
-        // Mouse wheel for fuel control
-        if (mouse_event.bstate & BUTTON4_PRESSED) {  // Wheel up
-            return InputResult(InputAction::INCREASE_FUEL);
-        }
-        
-        if (mouse_event.bstate & BUTTON5_PRESSED) {  // Wheel down
-            return InputResult(InputAction::DECREASE_FUEL);
-        }
-    }
-    
+#ifdef _WIN32
+    // Mouse input not implemented for Windows console version
     return InputResult(InputAction::NONE);
+#else
+    // ncurses mouse handling would go here
+    return InputResult(InputAction::NONE);
+#endif
 }
 
 /**
@@ -213,11 +187,10 @@ bool InputHandler::should_process_key(int key) {
         repeat_count++;
         // Allow some keys to repeat (movement, fuel)
         switch (key) {
-            case 'w': case 'W': case KEY_LEFT:
-            case 'e': case 'E': case KEY_RIGHT:
+            case 'w': case 'W': case 'a': case 'A':
+            case 'e': case 'E': case 'd': case 'D':
             case '+': case '=':
             case '-': case '_':
-            case KEY_UP: case KEY_DOWN:
                 return repeat_count % 3 == 0;  // Every 3rd repeat
             default:
                 return repeat_count == 1;      // Only first press
@@ -230,22 +203,27 @@ bool InputHandler::should_process_key(int key) {
 }
 
 /**
- * Initialize mouse support
+ * Initialize mouse support (Windows compatible)
  */
 void InputHandler::init_mouse() {
-    if (has_mouse()) {
-        mousemask(BUTTON1_CLICKED | BUTTON3_CLICKED | 
-                  BUTTON4_PRESSED | BUTTON5_PRESSED, NULL);
-        mouse_enabled = true;
-    }
+#ifdef _WIN32
+    // Mouse support not implemented for Windows console version
+    mouse_enabled = false;
+#else
+    // ncurses mouse initialization would go here
+    mouse_enabled = false;
+#endif
 }
 
 /**
- * Cleanup mouse support
+ * Cleanup mouse support (Windows compatible)
  */
 void InputHandler::cleanup_mouse() {
-    if (mouse_enabled) {
-        mousemask(0, NULL);
-        mouse_enabled = false;
-    }
+#ifdef _WIN32
+    // Nothing to cleanup for Windows console version
+    mouse_enabled = false;
+#else
+    // ncurses mouse cleanup would go here
+    mouse_enabled = false;
+#endif
 }
