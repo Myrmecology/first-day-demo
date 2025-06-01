@@ -110,4 +110,5 @@ This Snake game demonstrates **advanced console programming** with:
 
 ---
 
-**Built with passion for smooth, professional gameplay** 🐍✨ Happy coding 
+**Built with passion for smooth, professional gameplay** 🐍✨ Happy coding I built this game for my class while we wait for 
+our certificate 
