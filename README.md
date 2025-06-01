@@ -110,4 +110,4 @@ This Snake game demonstrates **advanced console programming** with:
 
 ---
 
-**Built with passion for smooth, professional gameplay** 🐍✨
+**Built with passion for smooth, professional gameplay** 🐍✨ Happy coding 
