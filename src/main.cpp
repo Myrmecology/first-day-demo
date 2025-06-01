@@ -128,11 +128,11 @@ int main() {
         InputHandler input_handler;
         
         // Main simulation loop
-        auto last_frame = std::chrono::high_resolution_clock::now();
         const auto frame_duration = std::chrono::milliseconds(33); // ~30 FPS
         
         bool running = true;
         bool paused = false;
+        int frame_count = 0;
         
         while (running && !should_exit) {
             auto frame_start = std::chrono::high_resolution_clock::now();
@@ -196,14 +196,19 @@ int main() {
                 fire_engine.update();
             }
             
-            // Render frame
-            clear_console();
+            // Only clear and render every few frames to reduce flicker
+            if (frame_count % 1 == 0) {  // Render every frame, but could reduce to % 2 for less flicker
+                // Render frame
+                clear_console();
+                
+                // Draw fire effect
+                fire_engine.render();
+                
+                // Draw UI overlay
+                ui_manager.render(fire_engine.get_stats(), paused);
+            }
             
-            // Draw fire effect
-            fire_engine.render();
-            
-            // Draw UI overlay
-            ui_manager.render(fire_engine.get_stats(), paused);
+            frame_count++;
             
             // Frame rate limiting
             auto frame_end = std::chrono::high_resolution_clock::now();

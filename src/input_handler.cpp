@@ -113,7 +113,8 @@ InputResult InputHandler::process_input(int key) {
         case 'R':
             return InputResult(InputAction::RESET);
             
-        case ' ':  // Space bar
+        case ' ':  // Space bar for pause/unpause
+        case 32:   // ASCII code for space
             return InputResult(InputAction::TOGGLE_PAUSE);
         
         // Display controls
