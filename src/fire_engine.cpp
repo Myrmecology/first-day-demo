@@ -144,6 +144,14 @@ void FireEngine::render() {
     int offset_x = (max_x - width) / 2;
     int offset_y = (max_y - height) / 2;
     
+    // Clear only the fire area to reduce flicker
+    for (int y = 0; y < height; y++) {
+        set_cursor_position(offset_x, offset_y + y);
+        for (int x = 0; x < width; x++) {
+            std::cout << ' ';  // Clear the line
+        }
+    }
+    
     // Render heat grid
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {

@@ -133,9 +133,16 @@ int main() {
         bool running = true;
         bool paused = false;
         int frame_count = 0;
+        bool first_frame = true;
         
         while (running && !should_exit) {
             auto frame_start = std::chrono::high_resolution_clock::now();
+            
+            // Clear screen only on first frame
+            if (first_frame) {
+                clear_console();
+                first_frame = false;
+            }
             
             // Handle input
             int key = get_key_press();
@@ -169,6 +176,11 @@ int main() {
                 case InputAction::CYCLE_COLORS:
                     ui_manager.cycle_color_scheme();
                     fire_engine.set_color_scheme(ui_manager.get_color_scheme());
+                    // Force a visual update by resetting some heat
+                    for (int i = 0; i < 5; i++) {
+                        fire_engine.add_fuel(1);
+                        fire_engine.add_fuel(-1);
+                    }
                     break;
                     
                 case InputAction::TOGGLE_PAUSE:
@@ -196,14 +208,11 @@ int main() {
                 fire_engine.update();
             }
             
-            // Only clear and render every few frames to reduce flicker
-            if (frame_count % 1 == 0) {  // Render every frame, but could reduce to % 2 for less flicker
-                // Render frame
-                clear_console();
-                
-                // Draw fire effect
-                fire_engine.render();
-                
+            // Render fire effect (main area only)
+            fire_engine.render();
+            
+            // Only redraw UI every few frames to reduce flicker
+            if (frame_count % 3 == 0) {  // Redraw UI every 3 frames
                 // Draw UI overlay
                 ui_manager.render(fire_engine.get_stats(), paused);
             }

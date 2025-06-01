@@ -114,7 +114,6 @@ InputResult InputHandler::process_input(int key) {
             return InputResult(InputAction::RESET);
             
         case ' ':  // Space bar for pause/unpause
-        case 32:   // ASCII code for space
             return InputResult(InputAction::TOGGLE_PAUSE);
         
         // Display controls
@@ -193,6 +192,8 @@ bool InputHandler::should_process_key(int key) {
             case '+': case '=':
             case '-': case '_':
                 return repeat_count % 3 == 0;  // Every 3rd repeat
+            case ' ':  // Space bar - don't repeat too fast
+                return repeat_count > 10;      // Allow after delay
             default:
                 return repeat_count == 1;      // Only first press
         }

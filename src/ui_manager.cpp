@@ -109,11 +109,11 @@ void UIManager::render_control_panel(const FireStats& stats, bool paused) {
     if (paused) {
         set_console_color(UI_WARNING);
         set_cursor_position(content_x, content_y);
-        std::cout << "PAUSED";
+        std::cout << "** PAUSED **";
     } else {
         set_console_color(UI_SUCCESS);
         set_cursor_position(content_x, content_y);
-        std::cout << "RUNNING";
+        std::cout << "RUNNING     ";  // Extra spaces to clear old text
     }
     content_y += 2;
     
